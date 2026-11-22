@@ -1,5 +1,6 @@
 [
   { "name": "1-cover.jpg", "query": "?shot=cover" },
-  { "name": "2-tools.jpg", "query": "?shot=tools" },
-  { "name": "3-getaway.jpg", "query": "?shot=getaway" }
+  { "name": "2-atrium.jpg", "query": "?shot=atrium" },
+  { "name": "3-tools.jpg", "query": "?shot=tools" },
+  { "name": "4-getaway.jpg", "query": "?shot=getaway" }
 ]

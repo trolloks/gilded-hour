@@ -8,17 +8,17 @@ export function stageShot(world, name) {
   world.stats = { spotted: 2, hacks: 1, time: 214, alarmsTriggered: 2 };
 
   if (name === 'atrium') {
-    world.alarm = 58;
+    world.alarm = 62;
     world.player.x = 800;
-    world.player.y = 552;
-    world.player.facing = -1.48;
+    world.player.y = 680;
+    world.player.facing = -1.5;
     world.player.sneaking = true;
-    world.player.shadowed = true;
     world.hint = null;
-    positionGuard(world.guards[0], 432, 334, 0.62, 'patrol', 0.2);
-    positionGuard(world.guards[1], 1168, 328, 2.56, 'patrol', 0.34);
+    positionGuard(world.guards[0], 432, 334, 0.55, 'patrol', 0.2);
+    positionGuard(world.guards[1], 1168, 334, 2.62, 'patrol', 0.34);
     freezeCamera(world.cameras[0], 1.02);
     freezeCamera(world.cameras[1], 2.18);
+    freezeCamera(world.cameras[2], 3.12);
     return;
   }
 

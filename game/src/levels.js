@@ -120,7 +120,7 @@ function createAtriumLevel() {
   level.cameras.push(
     { x: 116, y: 118, base: 0.9, sweep: 0.78, speed: 0.55, range: 348, fov: 1.02, name: 'NORTH-WEST' },
     { x: 1484, y: 118, base: 2.24, sweep: 0.78, speed: 0.47, range: 348, fov: 1.02, name: 'NORTH-EAST' },
-    { x: 700, y: 110, base: 1.24, sweep: 0.64, speed: 0.4, range: 320, fov: 0.9, name: 'GALLERY' },
+    { x: 1170, y: 402, base: 3.12, sweep: 0.55, speed: 0.42, range: 330, fov: 0.95, name: 'GALLERY' },
   );
 
   return level;
