@@ -28,28 +28,25 @@ export function stageShot(world, name) {
 
   if (name === 'tools') {
     world.alarm = 46;
-    world.player.x = 600;
-    world.player.y = 540;
-    world.player.facing = Math.PI;
+    world.player.x = 700;
+    world.player.y = 500;
+    world.player.facing = 0;
     world.player.sneaking = true;
-    world.player.shadowed = true;
     world.tools.smoke.charges = 1;
     world.tools.emp.charges = 0;
     world.tools.decoy.charges = 2;
     world.tools.emp.cooldown = 0.42;
-    world.smokes.push({ x: 830, y: 480, radius: 110, life: 3.8, maxLife: 5.4, spin: 0.7 });
-    world.rings.push({ x: 600, y: 540, radius: 250, grow: 0, life: 0.4, maxLife: 0.7, color: '#79d5e8', width: 2.5 });
+    world.smokes.push({ x: 824, y: 500, radius: 112, life: 3.8, maxLife: 5.4, spin: 0.7 });
     world.hint = null;
     world.level.doors[0].open = true;
-    positionGuard(world.guards[0], 974, 500, Math.PI, 'investigate', 0.74);
-    positionGuard(world.guards[1], 398, 500, 0.12, 'chase', 1);
+    positionGuard(world.guards[0], 966, 500, Math.PI, 'investigate', 0.72);
+    positionGuard(world.guards[1], 398, 612, 0.12, 'patrol', 0.2);
     positionGuard(world.guards[2], 1300, 190, 2.9, 'patrol', 0.1);
     freezeCamera(world.cameras[0], 2.02, 8);
     freezeCamera(world.cameras[1], -1.42);
     world.particles.push(
-      { x: 760, y: 478, vx: 22, vy: -12, life: 1.8, maxLife: 2.2, size: 18, color: 'rgba(190,203,206,0.22)' },
-      { x: 706, y: 512, vx: -14, vy: 8, life: 1.4, maxLife: 2, size: 24, color: 'rgba(190,203,206,0.18)' },
-      { x: 636, y: 522, vx: 0, vy: 0, life: 0.4, maxLife: 0.7, size: 3, color: '#79d5e8' },
+      { x: 796, y: 486, vx: 18, vy: -12, life: 1.8, maxLife: 2.2, size: 18, color: 'rgba(190,203,206,0.22)' },
+      { x: 848, y: 514, vx: -12, vy: 8, life: 1.4, maxLife: 2, size: 24, color: 'rgba(190,203,206,0.18)' },
     );
     return;
   }

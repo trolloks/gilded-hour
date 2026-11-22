@@ -951,6 +951,10 @@ export function createRenderer(canvas) {
       const lensGlow = new THREE.Mesh(new THREE.SphereGeometry(5.5, 10, 10), new THREE.MeshBasicMaterial({ color: 0xbff4ff, transparent: true, opacity: 0.95 }));
       lensGlow.position.set(0, 0, 18);
       group.add(lensGlow);
+      const offline = makeTextSprite('OFFLINE', '#79d5e8', 360, 64, 90);
+      offline.position.set(0, 44, 0);
+      offline.visible = false;
+      group.add(offline);
       dynamicGroup.add(group);
 
       const cone = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({
@@ -972,7 +976,7 @@ export function createRenderer(canvas) {
       beam.position.set(cameraDef.range / 2, 2.2, 0);
       beamGroup.add(beam);
       dynamicGroup.add(beamGroup);
-      refs.cameras.push({ index, camera: cameraDef, group, lens, lensGlow, blink, cone, beamGroup, beam });
+      refs.cameras.push({ index, camera: cameraDef, group, lens, lensGlow, blink, offline, cone, beamGroup, beam });
     });
   }
 
@@ -1100,6 +1104,7 @@ export function createRenderer(canvas) {
       const disabled = cameraState.disabled > 0;
       item.lens.material = disabled ? assets.steel : assets.cyan;
       item.lensGlow.visible = !disabled;
+      item.offline.visible = disabled;
       item.blink.material.opacity = disabled ? 0.2 : cameraState.alert > 0 ? 0.4 + 0.6 * Math.sin(time * 14) : 0.55 + 0.45 * Math.sin(time * 2.6);
       if (disabled) {
         item.cone.visible = false;
