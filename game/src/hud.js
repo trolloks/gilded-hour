@@ -6,7 +6,7 @@ import { ACT_META, ALARM, COLORS } from './config.js';
 import { clamp } from './geometry.js';
 import { alarmLabel, levelObjective } from './world.js';
 
-const SERIF = 'Georgia, "Times New Roman", serif';
+const SERIF = 'Cinzel, Georgia, "Times New Roman", serif';
 const SANS = '"Trebuchet MS", "Segoe UI", sans-serif';
 
 function cutPanel(ctx, x, y, w, h, cut = 10) {

@@ -6,7 +6,7 @@ import { createLevel } from './levels.js';
 import { createWorld, updateWorld } from './world.js';
 import { createInput } from './input.js';
 import { createAudio } from './audio.js';
-import { createRenderer } from './renderer.js';
+import { createRenderer } from './renderer3d.js';
 import { SHOT_LEVEL, stageShot } from './shots.js';
 
 const params = new URLSearchParams(window.location.search);
@@ -16,6 +16,8 @@ const statusLine = document.getElementById('status');
 const input = createInput(canvas);
 const audio = createAudio();
 const renderer = createRenderer(canvas);
+await renderer.ready;
+if (document.fonts?.ready) await document.fonts.ready;
 
 let actIndex = 0;
 let world = createWorld(createLevel(actIndex));

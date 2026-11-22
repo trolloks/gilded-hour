@@ -78,9 +78,11 @@ function createAtriumLevel() {
     { x: 1016, y: 636, w: 64, h: 64, kind: 'column' },
     { x: 236, y: 446, w: 132, h: 46, kind: 'case' },
     { x: 1232, y: 446, w: 132, h: 46, kind: 'case' },
+    { x: 370, y: 242, w: 110, h: 42, kind: 'case' },
+    { x: 1120, y: 242, w: 110, h: 42, kind: 'case' },
     { x: 676, y: 596, w: 248, h: 34, kind: 'bench' },
     { x: 200, y: 640, w: 96, h: 96, kind: 'desk' },
-    { x: 1300, y: 640, w: 96, h: 96, kind: 'desk' },
+    { x: 1250, y: 640, w: 146, h: 76, kind: 'piano' },
   );
 
   // The plinth itself: low, solid, and the thing the loot sits on.
@@ -116,8 +118,9 @@ function createAtriumLevel() {
   );
 
   level.cameras.push(
-    { x: 92, y: 84, base: 0.82, sweep: 0.78, speed: 0.55, range: 348, fov: 1.02, name: 'NORTH-WEST' },
-    { x: 1508, y: 84, base: 2.32, sweep: 0.78, speed: 0.47, range: 348, fov: 1.02, name: 'NORTH-EAST' },
+    { x: 116, y: 118, base: 0.9, sweep: 0.78, speed: 0.55, range: 348, fov: 1.02, name: 'NORTH-WEST' },
+    { x: 1484, y: 118, base: 2.24, sweep: 0.78, speed: 0.47, range: 348, fov: 1.02, name: 'NORTH-EAST' },
+    { x: 700, y: 110, base: 1.24, sweep: 0.64, speed: 0.4, range: 320, fov: 0.9, name: 'GALLERY' },
   );
 
   return level;
