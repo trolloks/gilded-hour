@@ -79,8 +79,13 @@ export function updateWorld(world, dt, input, aim, audio) {
   for (const guard of world.guards) updateGuard(guard, world, dt, audio);
   for (const camera of world.cameras) updateCamera(camera, world, dt);
 
+  if (world.phase !== 'play') {
+    updateAlarm(world, dt);
+    return;
+  }
+
   checkLasers(world, audio);
-  checkExit(world, audio);
+  if (world.phase === 'play') checkExit(world, audio);
   updateAlarm(world, dt);
 
   if (world.pulseNow && audio) audio.alarmPulse(world.alarm / ALARM.max);
@@ -99,6 +104,7 @@ function updateInteraction(world, dt, input, audio) {
   world.interaction = target ? { ...target, progress: 0 } : null;
 
   if (!target) {
+    world.interactionState = null;
     world.hint = interactionHint(world);
     return;
   }
@@ -209,6 +215,7 @@ function checkLasers(world, audio) {
 }
 
 function checkExit(world, audio) {
+  if (world.phase !== 'play') return;
   const exit = world.level.exit;
   const inside = pointInRect(world.player.x, world.player.y, {
     x: exit.x - 8,

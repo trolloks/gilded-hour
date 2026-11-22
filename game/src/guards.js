@@ -24,6 +24,7 @@ export function createGuard(definition, index) {
     suspicion: 0,
     pause: 0.6 + index * 0.35,
     search: 0,
+    investigate: 0,
     lastSeen: { x: firstX, y: firstY },
     animTime: index * 1.7,
     alertFlash: 0,
@@ -104,10 +105,11 @@ function updatePatrol(guard, world, dt) {
 }
 
 function updateInvestigate(guard, world, dt) {
+  guard.investigate = Math.max(0, guard.investigate - dt);
   const target = guard.lastSeen;
   const d = distance(guard.x, guard.y, target.x, target.y);
   guard.angle = moveTowardAngle(guard.angle, angleOf(target.x - guard.x, target.y - guard.y), dt * 3);
-  if (d < 12) {
+  if (d < 12 || guard.investigate <= 0) {
     guard.state = 'search';
     guard.search = 2.6;
     return;
@@ -131,13 +133,13 @@ function updateChase(guard, world, dt, sees) {
   guard.angle = moveTowardAngle(guard.angle, angleOf(target.x - guard.x, target.y - guard.y), dt * 5.2);
   if (sees) {
     raiseAlarm(world, world.alarmChaseRate * dt, 'A warden is chasing you');
-    if (distance(guard.x, guard.y, player.x, player.y) < 27) {
-      world.caughtBy = guard.name;
-      world.phase = 'caught';
-      world.caughtAt = world.time;
-      world.shake = 16;
-      return;
-    }
+  }
+  if (distance(guard.x, guard.y, player.x, player.y) < 27) {
+    world.caughtBy = guard.name;
+    world.phase = 'caught';
+    world.caughtAt = world.time;
+    world.shake = 16;
+    return;
   }
   if (d < 14 && !sees) {
     guard.state = 'search';
@@ -164,6 +166,7 @@ function listenForNoise(guard, world) {
     guard.lastSeen.x = noise.x;
     guard.lastSeen.y = noise.y;
     guard.state = 'investigate';
+    guard.investigate = 5;
     guard.pause = 0;
     guard.alertFlash = 0.6;
     guard.suspicion = Math.max(guard.suspicion, 0.24);

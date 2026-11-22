@@ -101,7 +101,7 @@ function createAtriumLevel() {
   level.guards.push(
     {
       name: 'Warden Pike',
-      path: [[330, 318], [1270, 318]],
+      path: [[470, 320], [1130, 320]],
       speed: 68,
       range: 255,
       fov: 1.15,
@@ -109,7 +109,7 @@ function createAtriumLevel() {
     },
     {
       name: 'Warden Voss',
-      path: [[124, 760], [340, 760], [340, 336], [124, 336]],
+      path: [[100, 720], [100, 360]],
       speed: 62,
       range: 235,
       fov: 1.05,
@@ -319,7 +319,7 @@ function createVaultLevel() {
   level.guards.push(
     {
       name: 'Captain Rourke',
-      path: [[360, 238], [1240, 238], [1240, 770], [360, 770]],
+      path: [[390, 238], [1180, 238], [1180, 820], [390, 820]],
       speed: 70,
       range: 260,
       fov: 1.16,

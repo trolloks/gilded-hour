@@ -727,29 +727,29 @@ export function createRenderer(canvas) {
 
     const object = new THREE.Group();
     if (level.id === 'archive') {
-      const stand = box(58, 22, 40, assets.wood, 0, 11, 0);
+      const stand = box(66, 24, 46, assets.wood, 0, 12, 0);
       object.add(stand);
-      const cover = box(40, 8, 30, new THREE.MeshStandardMaterial({ color: 0x4a1118, roughness: 0.6 }), 0, 30, 0);
+      const cover = box(48, 10, 36, new THREE.MeshStandardMaterial({ color: 0x4a1118, roughness: 0.6 }), 0, 32, 0);
       cover.rotation.y = -0.18;
       object.add(cover);
-      const pages = box(36, 5, 26, new THREE.MeshStandardMaterial({ color: 0xefe3c6, roughness: 0.85 }), 0, 32, 0);
+      const pages = box(44, 6, 32, new THREE.MeshStandardMaterial({ color: 0xefe3c6, roughness: 0.85 }), 0, 35, 0);
       pages.rotation.y = -0.18;
       object.add(pages);
-      const clasp = box(6, 9, 31, assets.gold, 14, 30, 0);
+      const clasp = box(8, 11, 37, assets.gold, 17, 32, 0);
       clasp.rotation.y = -0.18;
       object.add(clasp);
     } else if (level.id === 'atrium') {
-      const body = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.4, 20, 8), assets.gold);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(4, 5, 26, 8), assets.gold);
       body.position.y = 80;
       object.add(body);
       for (const side of [-1, 1]) {
-        const wing = new THREE.Mesh(new THREE.SphereGeometry(16, 12, 8), assets.gold);
+        const wing = new THREE.Mesh(new THREE.SphereGeometry(22, 12, 8), assets.gold);
         wing.scale.set(1.6, 0.18, 0.72);
-        wing.position.set(side * 15, 82, 0);
+        wing.position.set(side * 20, 84, 0);
         wing.rotation.z = side * 0.28;
         object.add(wing);
       }
-      const pin = new THREE.Mesh(new THREE.TorusGeometry(5, 1, 6, 16), assets.brassBright);
+      const pin = new THREE.Mesh(new THREE.TorusGeometry(6, 1.2, 6, 16), assets.brassBright);
       pin.position.y = 94;
       pin.rotation.x = Math.PI / 2;
       object.add(pin);
@@ -936,7 +936,7 @@ export function createRenderer(canvas) {
     level.cameras.forEach((cameraDef, index) => {
       const group = new THREE.Group();
       group.position.set(SX(cameraDef.x), 68, SZ(cameraDef.y));
-      group.scale.setScalar(1.6);
+      group.scale.setScalar(1.8);
       group.add(box(30, 18, 22, assets.steel, 0, 0, 0));
       const lens = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 6.2, 8, 12), assets.cyan);
       lens.rotation.x = Math.PI / 2;
@@ -946,9 +946,9 @@ export function createRenderer(canvas) {
       group.add(bracket);
       const blink = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xe8484f, transparent: true, opacity: 0.95, depthWrite: false }));
       blink.position.set(-12, 10, 0);
-      blink.scale.set(16, 16, 1);
+      blink.scale.set(18, 18, 1);
       group.add(blink);
-      const lensGlow = new THREE.Mesh(new THREE.SphereGeometry(4.2, 10, 10), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.8 }));
+      const lensGlow = new THREE.Mesh(new THREE.SphereGeometry(5.5, 10, 10), new THREE.MeshBasicMaterial({ color: 0xbff4ff, transparent: true, opacity: 0.95 }));
       lensGlow.position.set(0, 0, 18);
       group.add(lensGlow);
       dynamicGroup.add(group);
