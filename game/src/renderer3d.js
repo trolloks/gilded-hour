@@ -750,6 +750,16 @@ export function createRenderer(canvas) {
     shoulders.position.y = 51;
     group.add(shoulders);
 
+    const arms = [];
+    for (const side of [-1, 1]) {
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.6, 17, 8), assets.coat);
+      arm.position.set(-2, 43, side * 11);
+      arm.rotation.x = side * 0.18;
+      arm.castShadow = true;
+      group.add(arm);
+      arms.push(arm);
+    }
+
     const head = new THREE.Mesh(new THREE.SphereGeometry(8, 12, 12), assets.skin);
     head.position.y = 61;
     head.castShadow = true;
@@ -776,7 +786,7 @@ export function createRenderer(canvas) {
     group.add(satchel);
 
     dynamicGroup.add(group);
-    refs.player = { group, legs, scarf, satchel, coat, ring };
+    refs.player = { group, legs, arms, scarf, satchel, coat, ring };
   }
 
   function buildGuards(level) {
@@ -801,6 +811,15 @@ export function createRenderer(canvas) {
       shoulders.position.y = 54;
       shoulders.castShadow = true;
       group.add(shoulders);
+      const arms = [];
+      for (const side of [-1, 1]) {
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 4.2, 19, 8), assets.guardCoat);
+        arm.position.set(-3, 44, side * 13);
+        arm.rotation.x = side * 0.16;
+        arm.castShadow = true;
+        group.add(arm);
+        arms.push(arm);
+      }
       const head = new THREE.Mesh(new THREE.SphereGeometry(8, 12, 12), assets.skin);
       head.position.y = 64;
       group.add(head);
@@ -839,7 +858,7 @@ export function createRenderer(canvas) {
       dynamicGroup.add(cone);
 
       dynamicGroup.add(group);
-      refs.guards.push({ index, guard, group, legs, body, cone, mood, face: guard.angle });
+      refs.guards.push({ index, guard, group, legs, arms, body, cone, mood, face: guard.angle });
     });
   }
 
@@ -870,7 +889,17 @@ export function createRenderer(canvas) {
       }));
       cone.position.y = 1.5;
       dynamicGroup.add(cone);
-      refs.cameras.push({ index, camera: cameraDef, group, lens, blink, cone });
+
+      const beamGroup = new THREE.Group();
+      beamGroup.position.set(SX(cameraDef.x), 0, SZ(cameraDef.y));
+      const beam = new THREE.Mesh(
+        new THREE.BoxGeometry(cameraDef.range, 0.7, 1.6),
+        new THREE.MeshBasicMaterial({ color: 0xff7a3a, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending }),
+      );
+      beam.position.set(cameraDef.range / 2, 2.2, 0);
+      beamGroup.add(beam);
+      dynamicGroup.add(beamGroup);
+      refs.cameras.push({ index, camera: cameraDef, group, lens, blink, cone, beamGroup, beam });
     });
   }
 
@@ -938,6 +967,8 @@ export function createRenderer(canvas) {
       p.legs[1].rotation.x = -stride * 0.08;
       p.legs[0].position.z = stride * 0.35;
       p.legs[1].position.z = -stride * 0.35;
+      p.arms[0].rotation.x = 0.18 + stride * 0.055;
+      p.arms[1].rotation.x = -0.18 - stride * 0.055;
       p.satchel.visible = world.player.carrying;
       p.scarf.rotation.z = Math.sin(time * 2.2) * 0.08;
       p.coat.material = world.player.shadowed ? assets.coatShadow : assets.coat;
@@ -952,6 +983,8 @@ export function createRenderer(canvas) {
       const stride = guard.state === 'chase' ? Math.sin(guard.animTime * 12) * 7 : Math.sin(guard.animTime * 5) * 3;
       item.legs[0].position.z = stride * 0.3;
       item.legs[1].position.z = -stride * 0.3;
+      item.arms[0].rotation.x = 0.16 + stride * 0.04;
+      item.arms[1].rotation.x = -0.16 - stride * 0.04;
       item.body.material = guard.state === 'chase' ? assets.guardChase : assets.guardCoat;
       const mood = guardMood(guard);
       if (mood) {
@@ -974,8 +1007,11 @@ export function createRenderer(canvas) {
       item.blink.material.opacity = disabled ? 0.2 : cameraState.alert > 0 ? 0.4 + 0.6 * Math.sin(time * 14) : 0.55 + 0.45 * Math.sin(time * 2.6);
       if (disabled) {
         item.cone.visible = false;
+        item.beamGroup.visible = false;
       } else {
         item.cone.visible = true;
+        item.beamGroup.visible = true;
+        item.beamGroup.rotation.y = -cameraState.angle;
         updateCone(item.cone, cameraState.x, cameraState.y, cameraState.angle, cameraState.fov, cameraState.range, blockers, 0xff4a20);
       }
     }
