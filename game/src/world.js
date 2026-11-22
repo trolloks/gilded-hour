@@ -31,6 +31,7 @@ export function createWorld(level, options = {}) {
     pulseNow: false,
     time: 0,
     phase: 'play',
+    blueprint: false,
     interaction: null,
     hint: null,
     exitHint: 0,
@@ -135,7 +136,7 @@ function completeInteraction(world, target, audio) {
     world.loot.taken = true;
     world.player.carrying = true;
     world.flashGold = 1;
-    raiseAlarm(world, 13, 'The plinth weight sensor');
+    raiseAlarm(world, 10, 'The plinth weight sensor');
     world.stats.alarmsTriggered += 1;
     if (audio) audio.pickup();
     for (let i = 0; i < 26; i += 1) {

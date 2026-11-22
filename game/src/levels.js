@@ -262,7 +262,8 @@ function createVaultLevel() {
   level.walls.push(
     // the vault room
     wall(600, 260, 36, 320),
-    wall(964, 260, 36, 320),
+    wall(964, 260, 36, 110),
+    wall(964, 500, 36, 80),
     wall(600, 260, 400, 36),
     wall(600, 544, 150, 30),
     wall(850, 544, 150, 30),
@@ -280,7 +281,7 @@ function createVaultLevel() {
 
   level.cover.push(
     { x: 452, y: 400, w: 92, h: 62, kind: 'crate' },
-    { x: 1056, y: 400, w: 92, h: 62, kind: 'crate' },
+    { x: 1056, y: 540, w: 92, h: 62, kind: 'crate' },
     { x: 448, y: 730, w: 128, h: 48, kind: 'desk' },
     { x: 1024, y: 730, w: 128, h: 48, kind: 'desk' },
     { x: 300, y: 700, w: 74, h: 74, kind: 'column' },
@@ -294,10 +295,13 @@ function createVaultLevel() {
     { x: OUTER, y: 700, w: 240, h: 120 },
     { x: 1324, y: 700, w: 240, h: 120 },
     { x: 600, y: 300, w: 36, h: 240, vent: true },
-    { x: 964, y: 300, w: 36, h: 240, vent: true },
+    { x: 964, y: 370, w: 110, h: 130, vent: true },
   );
 
-  level.vents.push({ x: 258, y: 270, w: 66, h: 450, label: 'DUCT' });
+  level.vents.push(
+    { x: 258, y: 270, w: 66, h: 450, label: 'DUCT' },
+    { x: 964, y: 370, w: 110, h: 130, label: 'CRAWL' },
+  );
 
   level.terminals.push({
     x: 300,

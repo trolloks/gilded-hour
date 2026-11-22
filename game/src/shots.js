@@ -1,11 +1,15 @@
 // Deterministic dioramas for the entry screenshots. Each one is a real frame of
 // the same renderer the player sees: no post-processing, no borrowed art.
 
-export const SHOT_LEVEL = { cover: 2, atrium: 0, vault: 2, tools: 1, getaway: 2 };
+export const SHOT_LEVEL = { cover: 2, atrium: 0, blueprint: 0, vault: 2, tools: 1, getaway: 2 };
 
 export function stageShot(world, name) {
   world.time = 4.2;
   world.stats = { spotted: 2, hacks: 1, time: 214, alarmsTriggered: 2 };
+
+  if (name === 'blueprint') {
+    return stageShot(world, 'atrium');
+  }
 
   if (name === 'atrium') {
     world.alarm = 62;

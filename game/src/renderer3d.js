@@ -6,7 +6,7 @@ import * as THREE from '../vendor/three.module.min.js';
 import { COLORS, WORLD } from './config.js';
 import { conePolygon } from './geometry.js';
 import { sightBlockers } from './collision.js';
-import { drawBriefing, drawCaught, drawHud, drawPause, drawTitle, drawVictory } from './hud.js';
+import { drawBlueprint, drawBriefing, drawCaught, drawHud, drawPause, drawTitle, drawVictory } from './hud.js';
 import { guardMood } from './guards.js';
 
 const VIEW_HEIGHT = 1000;
@@ -95,7 +95,9 @@ export function createRenderer(canvas) {
   key.shadow.normalBias = 0.6;
   const fill = new THREE.DirectionalLight(0x4a7a95, 1.3);
   fill.position.set(700, 600, -800);
-  scene.add(ambient, hemi, key, fill);
+  const alarmLight = new THREE.PointLight(0xe8484f, 0, 1200, 2);
+  alarmLight.position.set(0, 260, 0);
+  scene.add(ambient, hemi, key, fill, alarmLight);
 
   const loader = new THREE.TextureLoader();
   const assets = {};
@@ -143,8 +145,8 @@ export function createRenderer(canvas) {
     assets.jewel = new THREE.MeshStandardMaterial({ color: 0xb52a3a, metalness: 0.3, roughness: 0.18, emissive: 0x3a0508, emissiveIntensity: 0.5 });
     assets.leaf = new THREE.MeshStandardMaterial({ color: 0x2f6b4f, roughness: 0.82 });
     assets.dark = new THREE.MeshStandardMaterial({ color: 0x0a0f14, roughness: 0.9 });
-    assets.coat = new THREE.MeshStandardMaterial({ color: 0x1e414c, roughness: 0.68 });
-    assets.coatShadow = new THREE.MeshStandardMaterial({ color: 0x17343d, roughness: 0.72 });
+    assets.coat = new THREE.MeshStandardMaterial({ color: 0x2a6470, roughness: 0.62 });
+    assets.coatShadow = new THREE.MeshStandardMaterial({ color: 0x1f4b55, roughness: 0.68 });
     assets.guardCoat = new THREE.MeshStandardMaterial({ color: 0x5a2329, roughness: 0.72 });
     assets.guardChase = new THREE.MeshStandardMaterial({ color: 0x7d2930, roughness: 0.65 });
     assets.guardCap = new THREE.MeshStandardMaterial({ color: 0x191416, roughness: 0.75 });
@@ -605,6 +607,24 @@ export function createRenderer(canvas) {
       const seal = new THREE.Mesh(new THREE.TorusGeometry(26, 4, 8, 36), assets.brass);
       seal.position.set(0, 52, SZ(292));
       staticGroup.add(seal);
+      // The vault door proper: a steel disc behind the plinth.
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 8, 36), assets.steel);
+      disc.rotation.x = Math.PI / 2;
+      disc.position.set(0, 62, SZ(298) - 1);
+      disc.castShadow = true;
+      staticGroup.add(disc);
+      const doorRing = new THREE.Mesh(new THREE.TorusGeometry(56, 4, 8, 40), assets.brass);
+      doorRing.position.set(0, 62, SZ(298) + 4);
+      staticGroup.add(doorRing);
+      for (let i = 0; i < 6; i += 1) {
+        const spoke = box(6, 96, 4, assets.brass, 0, 62, SZ(298) + 5);
+        spoke.rotation.z = (Math.PI * i) / 6;
+        staticGroup.add(spoke);
+      }
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 10, 16), assets.gold);
+      hub.rotation.x = Math.PI / 2;
+      hub.position.set(0, 62, SZ(298) + 8);
+      staticGroup.add(hub);
       const cyan = new THREE.PointLight(0x79d5e8, 10, 260, 2);
       cyan.position.set(SX(300), 60, SZ(348));
       staticGroup.add(cyan);
@@ -700,18 +720,64 @@ export function createRenderer(canvas) {
     group.position.set(SX(level.loot.x), 0, SZ(level.loot.y));
     const beam = new THREE.Mesh(
       new THREE.CylinderGeometry(44, 26, 320, 20, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0xf2c96b, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
+      new THREE.MeshBasicMaterial({ color: 0xf2c96b, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }),
     );
     beam.position.y = 210;
     group.add(beam);
-    const gem = new THREE.Mesh(new THREE.OctahedronGeometry(30, 0), assets.gold);
-    gem.position.y = 76;
-    gem.castShadow = true;
-    group.add(gem);
-    const halo = new THREE.Mesh(new THREE.TorusGeometry(38, 1.6, 6, 32), assets.brassBright);
-    halo.rotation.x = Math.PI / 2;
-    halo.position.y = 56;
-    group.add(halo);
+
+    const object = new THREE.Group();
+    if (level.id === 'archive') {
+      const stand = box(58, 22, 40, assets.wood, 0, 11, 0);
+      object.add(stand);
+      const cover = box(40, 8, 30, new THREE.MeshStandardMaterial({ color: 0x4a1118, roughness: 0.6 }), 0, 30, 0);
+      cover.rotation.y = -0.18;
+      object.add(cover);
+      const pages = box(36, 5, 26, new THREE.MeshStandardMaterial({ color: 0xefe3c6, roughness: 0.85 }), 0, 32, 0);
+      pages.rotation.y = -0.18;
+      object.add(pages);
+      const clasp = box(6, 9, 31, assets.gold, 14, 30, 0);
+      clasp.rotation.y = -0.18;
+      object.add(clasp);
+    } else if (level.id === 'atrium') {
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.4, 20, 8), assets.gold);
+      body.position.y = 80;
+      object.add(body);
+      for (const side of [-1, 1]) {
+        const wing = new THREE.Mesh(new THREE.SphereGeometry(16, 12, 8), assets.gold);
+        wing.scale.set(1.6, 0.18, 0.72);
+        wing.position.set(side * 15, 82, 0);
+        wing.rotation.z = side * 0.28;
+        object.add(wing);
+      }
+      const pin = new THREE.Mesh(new THREE.TorusGeometry(5, 1, 6, 16), assets.brassBright);
+      pin.position.y = 94;
+      pin.rotation.x = Math.PI / 2;
+      object.add(pin);
+    } else {
+      const core = new THREE.Mesh(new THREE.OctahedronGeometry(30, 0), assets.gold);
+      core.position.y = 76;
+      core.castShadow = true;
+      object.add(core);
+      const heart = new THREE.Mesh(new THREE.OctahedronGeometry(14, 0), new THREE.MeshStandardMaterial({ color: 0xfff4d2, emissive: 0xffd27a, emissiveIntensity: 2.2, roughness: 0.15 }));
+      heart.position.y = 76;
+      object.add(heart);
+      for (let i = 0; i < 8; i += 1) {
+        const angle = (Math.PI * 2 * i) / 8;
+        const ray = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 26), assets.brassBright);
+        ray.position.set(Math.cos(angle) * 32, 76, Math.sin(angle) * 32);
+        ray.rotation.y = -angle;
+        object.add(ray);
+      }
+    }
+    group.add(object);
+
+    let halo = null;
+    if (level.id !== 'archive') {
+      halo = new THREE.Mesh(new THREE.TorusGeometry(38, 1.6, 6, 32), assets.brassBright);
+      halo.rotation.x = Math.PI / 2;
+      halo.position.y = 56;
+      group.add(halo);
+    }
     const light = new THREE.PointLight(0xffd27a, 60, 480, 2);
     light.position.set(0, 90, 0);
     group.add(light);
@@ -719,15 +785,15 @@ export function createRenderer(canvas) {
     label.position.set(0, 185, 0);
     group.add(label);
     dynamicGroup.add(group);
-    refs.loot = { group, gem, beam, light, halo, label, taken: false };
+    refs.loot = { group, gem: object, beam, light, halo, label, taken: false, spin: level.id === 'vault' };
   }
 
   function buildPlayer(level) {
     const group = new THREE.Group();
     group.position.set(SX(level.start.x), 0, SZ(level.start.y));
-    group.scale.setScalar(1.5);
+    group.scale.setScalar(1.65);
 
-    const ring = new THREE.Mesh(new THREE.RingGeometry(21, 24, 32), new THREE.MeshBasicMaterial({ color: 0xf2c96b, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false }));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(23, 28, 36), new THREE.MeshBasicMaterial({ color: 0xf2c96b, transparent: true, opacity: 0.62, side: THREE.DoubleSide, depthWrite: false }));
     ring.rotation.x = -Math.PI / 2;
     ring.position.y = 1.2;
     group.add(ring);
@@ -775,6 +841,10 @@ export function createRenderer(canvas) {
     band.position.y = 68.5;
     group.add(band);
 
+    const shirt = new THREE.Mesh(new THREE.BoxGeometry(7, 10, 2), new THREE.MeshStandardMaterial({ color: 0xf1e4c8, roughness: 0.75 }));
+    shirt.position.set(4, 43, 11);
+    group.add(shirt);
+
     const scarf = new THREE.Mesh(new THREE.BoxGeometry(5, 18, 2), assets.gold);
     scarf.position.set(-12, 42, -8);
     scarf.rotation.x = 0.5;
@@ -793,7 +863,7 @@ export function createRenderer(canvas) {
     level.guards.forEach((guard, index) => {
       const group = new THREE.Group();
       group.position.set(SX(guard.path[0][0]), 0, SZ(guard.path[0][1]));
-      group.scale.setScalar(1.5);
+      group.scale.setScalar(1.65);
 
       const legs = [];
       for (const side of [-1, 1]) {
@@ -866,7 +936,7 @@ export function createRenderer(canvas) {
     level.cameras.forEach((cameraDef, index) => {
       const group = new THREE.Group();
       group.position.set(SX(cameraDef.x), 68, SZ(cameraDef.y));
-      group.scale.setScalar(1.35);
+      group.scale.setScalar(1.6);
       group.add(box(30, 18, 22, assets.steel, 0, 0, 0));
       const lens = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 6.2, 8, 12), assets.cyan);
       lens.rotation.x = Math.PI / 2;
@@ -876,8 +946,11 @@ export function createRenderer(canvas) {
       group.add(bracket);
       const blink = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xe8484f, transparent: true, opacity: 0.95, depthWrite: false }));
       blink.position.set(-12, 10, 0);
-      blink.scale.set(10, 10, 1);
+      blink.scale.set(16, 16, 1);
       group.add(blink);
+      const lensGlow = new THREE.Mesh(new THREE.SphereGeometry(4.2, 10, 10), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.8 }));
+      lensGlow.position.set(0, 0, 18);
+      group.add(lensGlow);
       dynamicGroup.add(group);
 
       const cone = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({
@@ -899,7 +972,7 @@ export function createRenderer(canvas) {
       beam.position.set(cameraDef.range / 2, 2.2, 0);
       beamGroup.add(beam);
       dynamicGroup.add(beamGroup);
-      refs.cameras.push({ index, camera: cameraDef, group, lens, blink, cone, beamGroup, beam });
+      refs.cameras.push({ index, camera: cameraDef, group, lens, lensGlow, blink, cone, beamGroup, beam });
     });
   }
 
@@ -929,6 +1002,7 @@ export function createRenderer(canvas) {
     }
     if (!finite) {
       mesh.visible = false;
+      if (mesh.userData.outline) mesh.userData.outline.visible = false;
       return;
     }
     mesh.visible = true;
@@ -947,6 +1021,22 @@ export function createRenderer(canvas) {
     mesh.geometry.dispose();
     mesh.geometry = geometry;
     mesh.material.color.setHex(color);
+
+    let outline = mesh.userData.outline;
+    if (!outline) {
+      outline = new THREE.LineLoop(
+        new THREE.BufferGeometry(),
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.42, depthWrite: false }),
+      );
+      mesh.userData.outline = outline;
+      mesh.parent.add(outline);
+    }
+    outline.geometry.dispose();
+    outline.geometry = new THREE.BufferGeometry().setFromPoints(
+      points.map((point) => new THREE.Vector3(SX(point.x), 1.75, SZ(point.y))),
+    );
+    outline.material.color.setHex(color);
+    outline.visible = true;
   }
 
   function poseActor(group, x, y, angle) {
@@ -957,11 +1047,16 @@ export function createRenderer(canvas) {
   function update(world, time) {
     const blockers = sightBlockers(world);
 
+    // The alarm paints the room red as it climbs.
+    alarmLight.intensity = world.alarm >= 62
+      ? (world.alarm / 100) * 18 * (0.78 + 0.22 * Math.sin(time * (world.alarm >= 84 ? 9 : 5)))
+      : 0;
+
     // Player pose and legs.
     const p = refs.player;
     if (p) {
       poseActor(p.group, world.player.x, world.player.y, world.player.facing);
-      p.group.scale.set(1.5, world.player.sneaking ? 1.2 : 1.5, 1.5);
+      p.group.scale.set(1.65, world.player.sneaking ? 1.32 : 1.65, 1.65);
       const stride = world.player.moving ? Math.sin(world.player.animTime * 10) * 8 : 0;
       p.legs[0].rotation.x = stride * 0.08;
       p.legs[1].rotation.x = -stride * 0.08;
@@ -1004,6 +1099,7 @@ export function createRenderer(canvas) {
       item.group.rotation.y = Math.PI / 2 - cameraState.angle;
       const disabled = cameraState.disabled > 0;
       item.lens.material = disabled ? assets.steel : assets.cyan;
+      item.lensGlow.visible = !disabled;
       item.blink.material.opacity = disabled ? 0.2 : cameraState.alert > 0 ? 0.4 + 0.6 * Math.sin(time * 14) : 0.55 + 0.45 * Math.sin(time * 2.6);
       if (disabled) {
         item.cone.visible = false;
@@ -1045,14 +1141,19 @@ export function createRenderer(canvas) {
       const taken = world.loot.taken;
       refs.loot.gem.visible = !taken;
       refs.loot.beam.visible = !taken;
-      refs.loot.halo.visible = !taken;
+      if (refs.loot.halo) refs.loot.halo.visible = !taken;
       refs.loot.light.intensity = taken ? 0 : 30 + Math.sin(time * 2.4) * 8;
-      if (!taken) {
-        refs.loot.gem.rotation.y = time * 0.9;
-        refs.loot.gem.position.y = 76 + Math.sin(time * 1.8) * 3;
-        refs.loot.halo.rotation.z = time * 0.4;
-      }
       refs.loot.label.visible = !taken;
+      if (!taken) {
+        if (refs.loot.spin) {
+          refs.loot.gem.rotation.y = time * 0.9;
+          refs.loot.gem.position.y = Math.sin(time * 1.8) * 3;
+        } else {
+          refs.loot.gem.rotation.y = Math.sin(time * 0.8) * 0.08;
+          refs.loot.gem.position.y = Math.sin(time * 1.5) * 1.2;
+        }
+        if (refs.loot.halo) refs.loot.halo.rotation.z = time * 0.4;
+      }
     }
 
     // Exit opens with the take.
@@ -1177,6 +1278,11 @@ export function createRenderer(canvas) {
     octx.setTransform(1, 0, 0, 1, 0, 0);
     octx.clearRect(0, 0, overlay.width, overlay.height);
     octx.setTransform(dpr * stage.scale, 0, 0, dpr * stage.scale, dpr * stage.ox, dpr * stage.oy);
+
+    if (world.blueprint) {
+      drawBlueprint(octx, world);
+      return;
+    }
 
     // Atmosphere under the HUD.
     const vignette = octx.createRadialGradient(800, 440, 260, 800, 440, 960);

@@ -3,7 +3,8 @@
 // so the composition holds at every window size.
 
 import { ACT_META, ALARM, COLORS } from './config.js';
-import { clamp } from './geometry.js';
+import { clamp, conePolygon } from './geometry.js';
+import { sightBlockers } from './collision.js';
 import { alarmLabel, levelObjective } from './world.js';
 
 const SERIF = 'Cinzel, Georgia, "Times New Roman", serif';
@@ -307,9 +308,254 @@ function drawControls(ctx) {
   ctx.font = `11px ${SANS}`;
   ctx.fillText('WASD MOVE · SHIFT RUN · CTRL SNEAK · E INTERACT', 1552, 828);
   ctx.fillStyle = 'rgba(199, 183, 149, 0.42)';
-  ctx.fillText('Q SMOKE · F EMP · R DECOY · P PAUSE · M MUTE', 1552, 848);
+  ctx.fillText('Q SMOKE · F EMP · R DECOY · TAB PLAN · P PAUSE · M MUTE', 1552, 848);
   ctx.restore();
 }
+
+export function drawBlueprint(ctx, world) {
+  const level = world.level;
+  const meta = ACT_META[level.act] ?? ACT_META[0];
+  const k = 0.65;
+  const planW = WORLD_PLAN.width * k;
+  const planH = WORLD_PLAN.height * k;
+  const ox = 800 - planW / 2;
+  const oy = 214;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(4, 9, 13, 0.96)';
+  ctx.fillRect(0, 0, 1600, 900);
+
+  // Drafting grid.
+  ctx.strokeStyle = 'rgba(121, 213, 232, 0.055)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < 1600; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 900);
+    ctx.stroke();
+  }
+  for (let y = 0; y < 900; y += 40) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(1600, y);
+    ctx.stroke();
+  }
+
+  cutPanel(ctx, 68, 56, 1464, 788, 18);
+  ctx.fillStyle = 'rgba(7, 14, 20, 0.72)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(121, 213, 232, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  ctx.textAlign = 'left';
+  ctx.fillStyle = COLORS.brass;
+  ctx.font = `600 12px ${SANS}`;
+  tracked(ctx, 'MERIDIAN HOUSE · EYES ONLY', 104, 100, 3.2);
+  ctx.fillStyle = COLORS.ivory;
+  ctx.font = `600 36px ${SERIF}`;
+  ctx.fillText(`ACT ${meta.numeral} — ${meta.act}`, 102, 144);
+  ctx.fillStyle = COLORS.brassBright;
+  ctx.font = `600 12px ${SANS}`;
+  tracked(ctx, 'SERVICE PLAN · PATROLS, CAMERAS AND ROUTES', 104, 170, 2.4);
+
+  ctx.save();
+  ctx.translate(ox, oy);
+  ctx.scale(k, k);
+
+  // Paper floor.
+  ctx.fillStyle = 'rgba(12, 25, 32, 0.9)';
+  ctx.fillRect(0, 0, WORLD_PLAN.width, WORLD_PLAN.height);
+  ctx.strokeStyle = 'rgba(121, 213, 232, 0.35)';
+  ctx.lineWidth = 2 / k;
+  ctx.strokeRect(0, 0, WORLD_PLAN.width, WORLD_PLAN.height);
+
+  // Shadow pockets and vents.
+  for (const shadow of level.shadows) {
+    ctx.fillStyle = shadow.vent ? 'rgba(20, 60, 62, 0.25)' : 'rgba(0, 0, 0, 0.22)';
+    ctx.fillRect(shadow.x, shadow.y, shadow.w, shadow.h);
+  }
+  ctx.setLineDash([10 / k, 7 / k]);
+  ctx.strokeStyle = 'rgba(105, 201, 162, 0.7)';
+  ctx.lineWidth = 1.6 / k;
+  for (const vent of level.vents) {
+    ctx.strokeRect(vent.x, vent.y, vent.w, vent.h);
+    ctx.fillStyle = 'rgba(105, 201, 162, 0.8)';
+    ctx.font = `${13 / k}px ${SANS}`;
+    ctx.fillText('VENT', vent.x + 8, vent.y + 18 / k);
+  }
+  ctx.setLineDash([]);
+
+  // Walls and cover.
+  for (const wall of level.walls) {
+    ctx.fillStyle = 'rgba(16, 38, 48, 0.95)';
+    ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+    ctx.strokeStyle = 'rgba(121, 213, 232, 0.6)';
+    ctx.lineWidth = 1.8 / k;
+    ctx.strokeRect(wall.x, wall.y, wall.w, wall.h);
+  }
+  for (const item of level.cover) {
+    ctx.fillStyle = 'rgba(33, 62, 72, 0.85)';
+    ctx.fillRect(item.x, item.y, item.w, item.h);
+    ctx.strokeStyle = 'rgba(217, 164, 65, 0.55)';
+    ctx.lineWidth = 1.4 / k;
+    ctx.strokeRect(item.x, item.y, item.w, item.h);
+  }
+
+  // Doors and lasers.
+  for (const door of level.doors) {
+    ctx.fillStyle = door.open ? 'rgba(105, 201, 162, 0.25)' : 'rgba(217, 164, 65, 0.65)';
+    ctx.fillRect(door.x, door.y, door.w, door.h);
+    ctx.strokeStyle = 'rgba(242, 201, 107, 0.9)';
+    ctx.lineWidth = 1.6 / k;
+    ctx.strokeRect(door.x, door.y, door.w, door.h);
+  }
+  for (const laser of level.lasers) {
+    ctx.strokeStyle = world.laserOff > 0 ? 'rgba(121, 213, 232, 0.25)' : 'rgba(232, 72, 79, 0.9)';
+    ctx.lineWidth = 2.4 / k;
+    ctx.setLineDash(world.laserOff > 0 ? [8 / k, 6 / k] : []);
+    ctx.beginPath();
+    ctx.moveTo(laser.x1, laser.y1);
+    ctx.lineTo(laser.x2, laser.y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Patrol routes and guard cones.
+  const blockers = sightBlockers(world);
+  world.guards.forEach((guard, index) => {
+    ctx.strokeStyle = 'rgba(242, 201, 107, 0.55)';
+    ctx.lineWidth = 1.8 / k;
+    ctx.setLineDash([9 / k, 7 / k]);
+    ctx.beginPath();
+    ctx.moveTo(guard.path[0][0], guard.path[0][1]);
+    for (let i = 1; i < guard.path.length; i += 1) ctx.lineTo(guard.path[i][0], guard.path[i][1]);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const cone = conePolygon(guard.x, guard.y, guard.angle, guard.fov, guard.range, blockers, 22);
+    ctx.beginPath();
+    ctx.moveTo(cone[0].x, cone[0].y);
+    for (let i = 1; i < cone.length; i += 1) ctx.lineTo(cone[i].x, cone[i].y);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(232, 72, 79, 0.18)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(232, 72, 79, 0.55)';
+    ctx.lineWidth = 1.4 / k;
+    ctx.stroke();
+
+    ctx.fillStyle = '#e8484f';
+    ctx.beginPath();
+    ctx.arc(guard.x, guard.y, 10 / k, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0d12';
+    ctx.font = `700 ${11 / k}px ${SANS}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`G${index + 1}`, guard.x, guard.y + 4 / k);
+  });
+
+  // Camera coverage.
+  world.cameras.forEach((camera, index) => {
+    const cone = conePolygon(camera.x, camera.y, camera.angle, camera.fov, camera.range, blockers, 18);
+    ctx.beginPath();
+    ctx.moveTo(cone[0].x, cone[0].y);
+    for (let i = 1; i < cone.length; i += 1) ctx.lineTo(cone[i].x, cone[i].y);
+    ctx.closePath();
+    ctx.fillStyle = camera.disabled > 0 ? 'rgba(90, 110, 120, 0.12)' : 'rgba(255, 140, 60, 0.16)';
+    ctx.fill();
+    ctx.strokeStyle = camera.disabled > 0 ? 'rgba(120, 140, 150, 0.35)' : 'rgba(255, 150, 70, 0.55)';
+    ctx.lineWidth = 1.4 / k;
+    ctx.stroke();
+
+    ctx.fillStyle = camera.disabled > 0 ? '#596a72' : '#ff8a44';
+    ctx.beginPath();
+    ctx.arc(camera.x, camera.y, 9 / k, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0a0d12';
+    ctx.font = `700 ${10 / k}px ${SANS}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`C${index + 1}`, camera.x, camera.y + 3.5 / k);
+  });
+
+  // Terminals.
+  for (const terminal of level.terminals) {
+    ctx.fillStyle = terminal.used ? 'rgba(90, 110, 120, 0.7)' : 'rgba(121, 213, 232, 0.9)';
+    ctx.fillRect(terminal.x - 12, terminal.y - 12, 24, 24);
+    ctx.strokeStyle = '#0a0d12';
+    ctx.lineWidth = 2 / k;
+    ctx.strokeRect(terminal.x - 12, terminal.y - 12, 24, 24);
+  }
+
+  // Loot and exit.
+  ctx.save();
+  ctx.translate(level.loot.x, level.loot.y);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = '#f2c96b';
+  ctx.fillRect(-12, -12, 24, 24);
+  ctx.strokeStyle = '#fff3cf';
+  ctx.lineWidth = 2 / k;
+  ctx.strokeRect(-12, -12, 24, 24);
+  ctx.restore();
+  ctx.fillStyle = '#f2c96b';
+  ctx.font = `700 ${12 / k}px ${SANS}`;
+  ctx.textAlign = 'center';
+  ctx.fillText('LOOT', level.loot.x, level.loot.y - 24 / k);
+
+  const exit = level.exit;
+  ctx.strokeStyle = '#69c9a2';
+  ctx.lineWidth = 3 / k;
+  ctx.strokeRect(exit.x, exit.y, exit.w, exit.h);
+  ctx.fillStyle = 'rgba(105, 201, 162, 0.2)';
+  ctx.fillRect(exit.x, exit.y, exit.w, exit.h);
+  ctx.fillStyle = '#69c9a2';
+  ctx.font = `700 ${12 / k}px ${SANS}`;
+  ctx.fillText('EXIT', exit.x + exit.w / 2, exit.y - 12 / k);
+
+  // The thief and the way he faces.
+  ctx.fillStyle = '#f1e4c8';
+  ctx.beginPath();
+  ctx.arc(world.player.x, world.player.y, 11 / k, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#69c9a2';
+  ctx.lineWidth = 3 / k;
+  ctx.beginPath();
+  ctx.moveTo(world.player.x, world.player.y);
+  ctx.lineTo(world.player.x + Math.cos(world.player.facing) * 42 / k, world.player.y + Math.sin(world.player.facing) * 42 / k);
+  ctx.stroke();
+  ctx.fillStyle = '#f1e4c8';
+  ctx.font = `700 ${12 / k}px ${SANS}`;
+  ctx.fillText('YOU', world.player.x, world.player.y - 18 / k);
+
+  ctx.restore();
+
+  // Legend.
+  const legendY = 812;
+  const items = [
+    ['#e8484f', 'GUARD / SIGHT'],
+    ['#ff8a44', 'CAMERA'],
+    ['#f2c96b', 'PATROL / LOOT'],
+    ['#69c9a2', 'VENT / EXIT'],
+    ['#79d5e8', 'TERMINAL'],
+  ];
+  ctx.textAlign = 'left';
+  let lx = 104;
+  for (const [color, label] of items) {
+    ctx.fillStyle = color;
+    ctx.fillRect(lx, legendY - 8, 10, 10);
+    ctx.fillStyle = 'rgba(199, 183, 149, 0.8)';
+    ctx.font = `11px ${SANS}`;
+    ctx.fillText(label, lx + 16, legendY + 1);
+    lx += ctx.measureText(label).width + 44;
+  }
+  ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(199, 183, 149, 0.65)';
+  ctx.font = `11px ${SANS}`;
+  ctx.fillText('TAB TO CLOSE · THE HOUSE DOES NOT WAIT', 1496, legendY + 1);
+  ctx.restore();
+}
+
+const WORLD_PLAN = { width: 1600, height: 900 };
 
 export function drawTitle(ctx, time) {
   ctx.save();

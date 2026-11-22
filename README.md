@@ -15,7 +15,7 @@ node serve.ts
 # then open http://localhost:8080
 ```
 
-Move with **WASD**, run with **Shift**, sneak with **Ctrl**, interact with **E**, throw smoke with **Q**, fire an EMP with **F**, toss a decoy with **R**. The alarm gauge is the health bar: stay out of the light.
+Move with **WASD**, run with **Shift**, sneak with **Ctrl**, interact with **E**, throw smoke with **Q**, fire an EMP with **F**, toss a decoy with **R**, and open the service plan with **Tab**. The alarm gauge is the health bar: stay out of the light.
 
 ## How it is put together
 

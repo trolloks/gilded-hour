@@ -81,12 +81,14 @@ function canSee(world, guard) {
 
 function updatePatrol(guard, world, dt) {
   const target = guard.path[guard.waypoint % guard.path.length];
-  const d = distance(guard.x, guard.y, target.x, target.y);
+  const tx = target[0];
+  const ty = target[1];
+  const d = distance(guard.x, guard.y, tx, ty);
 
   if (guard.pause > 0) {
     guard.pause -= dt;
     const next = guard.path[(guard.waypoint + 1) % guard.path.length];
-    const base = angleOf(next.x - target.x, next.y - target.y);
+    const base = angleOf(next[0] - tx, next[1] - ty);
     guard.angle = moveTowardAngle(guard.angle, base + Math.sin(world.time * 1.35 + guard.index) * 0.62, dt * 1.6);
     return;
   }
@@ -97,8 +99,8 @@ function updatePatrol(guard, world, dt) {
     return;
   }
 
-  guard.angle = moveTowardAngle(guard.angle, angleOf(target.x - guard.x, target.y - guard.y), dt * 3.4);
-  stepToward(guard, world, target.x, target.y, guard.speed, dt);
+  guard.angle = moveTowardAngle(guard.angle, angleOf(tx - guard.x, ty - guard.y), dt * 3.4);
+  stepToward(guard, world, tx, ty, guard.speed, dt);
 }
 
 function updateInvestigate(guard, world, dt) {

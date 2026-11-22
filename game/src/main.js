@@ -23,6 +23,7 @@ let actIndex = 0;
 let world = createWorld(createLevel(actIndex));
 let screen = 'title';
 let paused = false;
+let blueprint = false;
 let sceneTime = 0;
 let last = performance.now();
 let accumulator = 0;
@@ -47,6 +48,7 @@ function beginAct() {
   world = makeWorld(actIndex);
   screen = 'play';
   paused = false;
+  blueprint = false;
   accumulator = 0;
   announcedCaught = false;
   audio.ensure();
@@ -103,6 +105,8 @@ function update(dt) {
     if (world.phase === 'caught' && !announcedCaught) {
       announcedCaught = true;
       screen = 'caught';
+      blueprint = false;
+      world.blueprint = false;
       audio.caught();
       announce(`Caught by ${world.caughtBy}. Press Enter to try again.`);
     } else if (world.phase === 'escaped') {
@@ -123,11 +127,16 @@ function frame(now) {
     paused = !paused;
     announce(paused ? 'Paused.' : 'Resumed.');
   }
+  if (input.wasPressed('Tab') && screen === 'play' && !paused) {
+    blueprint = !blueprint;
+    world.blueprint = blueprint;
+    announce(blueprint ? 'Service plan opened. Tab closes it.' : 'Service plan closed.');
+  }
   if (input.wasPressed('Enter') || input.wasPressed('Space') || input.takeClick()) {
     if (screen !== 'play' || paused) uiAction();
   }
 
-  if (!paused && screen === 'play') {
+  if (!paused && screen === 'play' && !blueprint) {
     accumulator += raw;
     let steps = 0;
     while (accumulator >= STEP && steps < 5) {
@@ -148,6 +157,7 @@ function runShot() {
   const index = SHOT_LEVEL[shotName] ?? 0;
   world = makeWorld(index);
   stageShot(world, shotName);
+  if (shotName === 'blueprint') world.blueprint = true;
   screen = 'play';
   let painted = 0;
   renderer.draw(world, screen, world.time, world.stats);
